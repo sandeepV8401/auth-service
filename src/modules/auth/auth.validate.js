@@ -28,4 +28,4 @@ const loginSchema = z.object({
         .min(6, "Password must be at least 6 characters"),
 })
 
-module.exports = { registerSchema };
+module.exports = { registerSchema, loginSchema };

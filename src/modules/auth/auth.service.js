@@ -1,13 +1,14 @@
-const AppError = require("../../shared/errors/AppError")
+const jwt = require("jsonwebtoken")
+const AppError = require("../../shared/middlewares/AppError")
 const User = require("./auth.model")
-const { hashPassword } = require("./auth.utils")
+const { hashPassword, comparePasswords, generateTokens } = require("./auth.utils")
+const env = require("../../config.js/env")
 
 const registerService = async (userData) => {
-    console.log("userData", userData)
+
     const { name, email, password } = userData
 
     const existingUser = await User.findOne({ email })
-    console.log("Existing User", existingUser)
     if (existingUser) {
         throw new AppError(400, "Email already exists", [{ field: "email", message: "Email already exists" }]);
     }
@@ -28,4 +29,27 @@ const registerService = async (userData) => {
     return { user: safeUser }
 }
 
-module.exports = { registerService }
+const loginService = async (userData) => {
+    const { email, password } = userData
+
+    const user = await User.findOne({ email }).select('+password')
+    if (!user) {
+        console.log("User does not exist")
+        throw new AppError(404, "User does not exists")
+    }
+
+    const storedPassword = user.password
+    const isMatch = await comparePasswords(password, storedPassword)
+
+    const { accessToken, refreshToken } = generateTokens({ userId: user._id, role: user.role })
+
+    const safeUser = user.toObject()
+    delete safeUser.password
+    delete safeUser.refreshToken
+    delete safeUser.__v
+    delete safeUser.updatedAt
+
+    return { user: safeUser, accessToken, refreshToken }
+}
+
+module.exports = { registerService, loginService }

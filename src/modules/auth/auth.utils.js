@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
-const AppError = require("../../shared/errors/AppError");
+const AppError = require("../../shared/middlewares/AppError");
 const env = require("../../config.js/env");
 
 const SALT_ROUNDS = 10;
@@ -14,6 +14,7 @@ const hashPassword = async (inputPassword) => {
 }
 
 const comparePasswords = async (inputPassword, storedPassword) => {
+
     if (!inputPassword || !storedPassword) {
         throw new AppError(400, "Password required")
     }
